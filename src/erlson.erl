@@ -35,7 +35,7 @@
 -export([to_json_term/1, from_json_term/1]).
 
 % these functions are used by Erlson compiled code
--export([fetch/2, store/3]).
+-export([fetch/2, store/3, remove/2]).
 
 -export([get_value/2]).
 -export([get_value/3]).
@@ -149,6 +149,33 @@ store_path([H|T], Value, Dict) ->
 
 store_val(Name, Value, Dict) ->
     orddict:store(Name, Value, Dict).
+
+
+-spec remove/2 :: (
+    Path :: name_path(),
+    Dict :: orddict() ) -> orddict().
+remove(Name,  Dict) when is_atom(Name) ->
+    remove_val(Name, Dict);
+remove(Path, Dict) ->
+    try
+        remove_path(Path, Dict)
+    catch
+        'erlson_not_found' ->
+            erlang:error('erlson_not_found', [Path, Dict])
+    end.
+
+remove_path([N], Dict) ->
+    remove_val(N, Dict);
+remove_path([H|T], Dict) ->
+    InnerDict = fetch_val(H, Dict),
+    % replace the existing value with the new inner dictionary
+    NewInnerDict = remove_path(T, InnerDict),
+    store_val(H, NewInnerDict, Dict).
+
+
+remove_val(Name, Dict) ->
+    orddict:erase(Name, Dict).
+
 
 
 % @doc Create Erlson dictionary from a proplist
