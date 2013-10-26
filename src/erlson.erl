@@ -185,8 +185,12 @@ remove_path([H|T], Dict) when is_integer(H) ->
     %% Split on H-1 in order to get the desired element in the head of the second list for quick access.
     {Part1, [InnerDict | Part2]} = lists:split(H-1, Dict),
     % replace the existing value with the new inner dictionary
-    NewInnerDict = remove_path(T, InnerDict),
-    Part1 ++ [NewInnerDict | Part2];
+    case remove_path(T, InnerDict) of
+	[] ->
+	    Part1 ++ Part2;
+	NewInnerDict ->
+	    Part1 ++ [NewInnerDict | Part2]
+    end;
 remove_path([H|T], Dict) ->
     InnerDict = fetch_val(H, Dict),
     % replace the existing value with the new inner dictionary
