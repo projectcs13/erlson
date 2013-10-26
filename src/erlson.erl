@@ -105,6 +105,9 @@ get_value(Path, Dict, Default) ->
     end.
 
 
+fetch_path([H|T], Dict) when is_integer(H) ->
+    Val = lists:nth(H, Dict),
+    fetch_path(T, Val);
 fetch_path([H|T], Dict) ->
     Val = fetch_val(H, Dict),
     fetch_path(T, Val);
@@ -138,8 +141,17 @@ store(Path, Value, Dict) ->
     end.
 
 
+store_path([N], Value, Dict) when is_integer(N) ->
+    {Part1, [_OldValue | Part2]} = lists:split(N-1, Dict),
+    Part1 ++ [Value | Part2];
 store_path([N], Value, Dict) ->
     store_val(N, Value, Dict);
+store_path([H|T], Value, Dict) when is_integer(H)->
+    %% Split on H-1 in order to get the desired element in the head of the second list for quick access.
+    {Part1, [InnerDict | Part2]} = lists:split(H-1, Dict),
+    % replace the existing value with the new inner dictionary
+    NewInnerDict = store_path(T, Value, InnerDict),
+    Part1 ++ [NewInnerDict | Part2];
 store_path([H|T], Value, Dict) ->
     InnerDict = fetch_val(H, Dict),
     % replace the existing value with the new inner dictionary
@@ -164,8 +176,17 @@ remove(Path, Dict) ->
             erlang:error('erlson_not_found', [Path, Dict])
     end.
 
+remove_path([N], Dict) when is_integer(N) ->
+    {Part1, [_H | Part2]} = lists:split(N-1, Dict),
+    Part1 ++ Part2;
 remove_path([N], Dict) ->
     remove_val(N, Dict);
+remove_path([H|T], Dict) when is_integer(H) ->
+    %% Split on H-1 in order to get the desired element in the head of the second list for quick access.
+    {Part1, [InnerDict | Part2]} = lists:split(H-1, Dict),
+    % replace the existing value with the new inner dictionary
+    NewInnerDict = remove_path(T, InnerDict),
+    Part1 ++ [NewInnerDict | Part2];
 remove_path([H|T], Dict) ->
     InnerDict = fetch_val(H, Dict),
     % replace the existing value with the new inner dictionary
@@ -395,7 +416,7 @@ store_json_field({N, V}, Dict) ->
 % as either atom() or binary(), and because Erlson dict is ordered, all binary()
 % fields will be stored closer to the tail of the list
 decode_json_field_name(N) ->
-    try binary_to_existing_atom(N, utf8)
+    try binary_to_atom(N, utf8)
     catch
         error:badarg -> N
     end.
