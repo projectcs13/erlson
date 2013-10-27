@@ -401,7 +401,7 @@ decode_json_term(L) when is_list(L) -> % JSON array
     [ decode_json_term(X) || X <- L ];
 decode_json_term('null') ->
     % decoding JSON null as a more conventional 'undefined'
-    'undefined'.
+    'null'.
 
 
 from_json_fields(L) ->
