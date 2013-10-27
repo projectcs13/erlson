@@ -28,7 +28,7 @@
 
 % public API
 -export([from_proplist/1, from_nested_proplist/1, from_nested_proplist/2]).
--export([to_json/1, from_json/1]).
+-export([to_json/1, from_json/1, is_json_string/1]).
 -export([list_to_json_array/1, list_from_json_array/1]).
 % these two functions are useful, if there's a need to call mochijson2:decode
 % and mochijson2:encode separately
@@ -287,6 +287,16 @@ store_proplist_elem(X, Dict, _MaxDepth) when is_atom(X) ->
 
 store_proplist_elem(_X, _Dict, _MaxDepth) ->
     throw('erlson_bad_proplist').
+
+
+is_json_string(Json) ->
+    try from_json(Json) of
+	_ -> true
+    catch
+	_:_ -> false
+    end.
+	    
+	     
 
 
 % @doc Convert Erlson dictionary to a JSON Object
