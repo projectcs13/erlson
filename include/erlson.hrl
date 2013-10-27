@@ -7,8 +7,8 @@
 -define(erlson_default(X, Default),
     try
         X
-    catch error:'erlson_not_found' ->
-        Default
+    catch error:_ ->
+	    Default
     end
 ).
 
